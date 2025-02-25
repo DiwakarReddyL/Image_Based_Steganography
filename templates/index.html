@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Steganography</title>
+    <script>
+        function encodeImage() {
+            let formData = new FormData(document.getElementById("encodeForm"));
+            fetch("/encode", { method: "POST", body: formData })
+            .then(response => response.blob())
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "encoded_image.png";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                alert("Encoded image saved successfully!");
+            })
+            .catch(error => alert("Error: " + error));
+        }
+
+        function decodeImage() {
+            let formData = new FormData(document.getElementById("decodeForm"));
+            fetch("/decode", { method: "POST", body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById("decodedMessage").value = data.message;
+                }
+            })
+            .catch(error => alert("Error: " + error));
+        }
+    </script>
+</head>
+<body>
+    <h2>Image Steganography</h2>
+
+    <!-- Encode Section -->
+    <h3>Encode a Message</h3>
+    <form id="encodeForm">
+        <label>Upload Image:</label>
+        <input type="file" name="image" required><br><br>
+        <label>Message:</label>
+        <input type="text" name="message" required><br><br>
+        <label>Encryption Key:</label>
+        <input type="text" name="key" required><br><br>
+        <button type="button" onclick="encodeImage()">Encode & Download</button>
+    </form>
+
+    <hr>
+
+    <!-- Decode Section -->
+    <h3>Decode a Message</h3>
+    <form id="decodeForm">
+        <label>Upload Encoded Image:</label>
+        <input type="file" name="image" required><br><br>
+        <label>Decryption Key:</label>
+        <input type="text" name="key" required><br><br>
+        <button type="button" onclick="decodeImage()">Decode</button>
+    </form>
+
+    <h4>Decoded Message:</h4>
+    <input type="text" id="decodedMessage" readonly>
+</body>
+</html>

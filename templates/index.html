@@ -3,68 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Steganography</title>
+    <title>Image Steganography Dashboard</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #eaeff1;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Dashboard Container */
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 60px;
+            padding: 20px;
+        }
+
+        /* Card Styling */
+        .card {
+            width: 280px;
+            height: 180px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 20px;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+        }
+
+        /* Card Title */
+        .card h3 {
+            color: #444;
+            margin-top: 20px;
+            font-size: 1.4em;
+            text-align: center;
+            transition: color 0.2s;
+        }
+
+        .card:hover h3 {
+            color: #2196F3;
+        }
+        /* Popup Message Styles */
+        .popup-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            z-index: 1000;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .popup-message.success {
+            background-color: #4CAF50;
+        }
+
+        .popup-message.error {
+            background-color: #f44336;
+        }
+
+        .popup-message.info {
+            background-color: #2196F3;
+        }
+
+        /* Form Section */
+        .section {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid #f0f0f0;
+            animation: fadeIn 0.5s;
+        }
+
+        /* Form Elements */
+        label {
+            margin-top: 10px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+
+        input[type="file"]:focus,
+        input[type="text"]:focus {
+            border-color: #2196F3;
+        }
+
+        /* Button Styles */
+        button {
+            padding: 12px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #1e88e5;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-btn {
+            background-color: #f44336;
+        }
+
+        .back-btn:hover {
+            background-color: #e53935;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                width: 90%;
+            }
+
+            .section {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+
+    </style>
     <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+        }
+    
+        function showMessage(message, type = 'info') {
+            const existingMessage = document.querySelector('.popup-message');
+            if (existingMessage) existingMessage.remove();
+    
+            const popup = document.createElement('div');
+            popup.className = `popup-message ${type}`;
+            popup.innerText = message;
+    
+            document.body.appendChild(popup);
+    
+            setTimeout(() => {
+                popup.style.opacity = '0';
+                setTimeout(() => popup.remove(), 500);
+            }, 2000);
+        }
+    
         function encodeImage() {
             let formData = new FormData(document.getElementById("encodeForm"));
             fetch("/encode", { method: "POST", body: formData })
-            .then(response => response.blob())
-            .then(blob => {
-                let url = window.URL.createObjectURL(blob);
-                let a = document.createElement("a");
-                a.href = url;
-                a.download = "encoded_image.png";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                alert("Encoded image saved successfully!");
-            })
-            .catch(error => alert("Error: " + error));
+                .then(response => {
+                    if (!response.ok) throw new Error("Encoding failed!");
+                    return response.blob();
+                })
+                .then(blob => {
+                    let url = window.URL.createObjectURL(blob);
+                    let a = document.createElement("a");
+                    a.href = url;
+                    a.download = "encoded_image.png";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showMessage("✅ Encoded image saved successfully!", "success");
+                })
+                .catch(error => showMessage("⚠️ Error: " + error.message, "error"));
         }
-
+    
         function decodeImage() {
             let formData = new FormData(document.getElementById("decodeForm"));
             fetch("/decode", { method: "POST", body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert("Error: " + data.error);
-                } else {
-                    document.getElementById("decodedMessage").value = data.message;
-                }
-            })
-            .catch(error => alert("Error: " + error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showMessage("⚠️ Error: " + data.error, "error");
+                    } else {
+                        document.getElementById("decodedMessage").value = data.message;
+                        showMessage("✅ Message successfully decoded!", "success");
+                    }
+                })
+                .catch(error => showMessage("⚠️ Error: " + error.message, "error"));
+        }
+    
+        function copyToClipboard(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            document.execCommand("copy");
+            showMessage("✅ Key copied to clipboard!", "success");
         }
     </script>
+    
 </head>
 <body>
-    <h2>Image Steganography</h2>
+    <h1 style="text-align:center;">📂 Image Steganography Dashboard</h1>
+
+    <div class="dashboard">
+        <div class="card" onclick="showSection('encodeSection')">
+            <h3>🔒 Encode a Message</h3>
+        </div>
+        <div class="card" onclick="showSection('decodeSection')">
+            <h3>🗝️ Decode a Message</h3>
+        </div>
+    </div>
 
     <!-- Encode Section -->
-    <h3>Encode a Message</h3>
-    <form id="encodeForm">
-        <label>Upload Image:</label>
-        <input type="file" name="image" required><br><br>
-        <label>Message:</label>
-        <input type="text" name="message" required><br><br>
-        <label>Encryption Key:</label>
-        <input type="text" name="key" required><br><br>
-        <button type="button" onclick="encodeImage()">Encode & Download</button>
-    </form>
+    <div class="section" id="encodeSection">
+        <h3>Encode a Message</h3>
+        <form id="encodeForm">
+            <input type="file" name="image" required>
+            <input type="text" name="message" placeholder="Enter Message" required>
+            <div style="position: relative; display: flex; align-items: center;">
+                <input type="text" id="secretKey" name="key" value="{{ secret_key }}" readonly required>
+                <span 
+                    style="cursor: pointer; margin-left: 8px; color: #2196F3;" 
+                    onclick="copyToClipboard('secretKey')" 
+                    title="Copy Key">
+                    📋
+                </span>
+            </div>
+            <button type="button" onclick="encodeImage()">Encode & Download</button>
+        </form>
+        <button class="back-btn" onclick="showSection('')">Back to Dashboard</button>
+    </div>
 
-    <hr>
 
     <!-- Decode Section -->
-    <h3>Decode a Message</h3>
-    <form id="decodeForm">
-        <label>Upload Encoded Image:</label>
-        <input type="file" name="image" required><br><br>
-        <label>Decryption Key:</label>
-        <input type="text" name="key" required><br><br>
-        <button type="button" onclick="decodeImage()">Decode</button>
-    </form>
+    <div class="section" id="decodeSection">
+        <h3>Decode a Message</h3>
+        <form id="decodeForm">
+            <input type="file" name="image" required>
+            <input type="text" name="key" placeholder="Enter Decryption Key" required>
+            <button type="button" onclick="decodeImage()">Decode</button>
+        </form>
+        <input type="text" id="decodedMessage" placeholder="Decoded Message" readonly>
+        <button class="back-btn" onclick="showSection('')">Back to Dashboard</button>
+    </div>
 
-    <h4>Decoded Message:</h4>
-    <input type="text" id="decodedMessage" readonly>
+    
 </body>
 </html>
